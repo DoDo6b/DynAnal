@@ -13,7 +13,7 @@ public:
     //  Constructors: default, value
     Var (                const std::string& name)      : var (T()),                name (std::move (name)), snapshotID (rand ())
     {
-        GVZ << "var" << snapshotID << "[label = \"#"<< snapshotID << ": " << name << "@" << &var << " { ??? }\"];" << std::endl;
+        GVZ << "var" << snapshotID << "[label = \"#"<< snapshotID << ": " << name << "@" << &var << " { " << var << " }\"];" << std::endl;
     }
     Var (const T& value, const std::string& name = "") : var (value),              name (std::move (name)), snapshotID (rand ())
     {
@@ -30,11 +30,13 @@ public:
     // Constructors: copy, move
     Var (const Var& other)           : var (other.var),             name (other.name),              snapshotID (rand ())
     {
+        GVZ << "var" << snapshotID << "[label = \"#"<< snapshotID << ": " << name << "@" << &var << " { " << var << " }\"];" << std::endl;
         GVZ << "var" << other.snapshotID << "->" << "var" << snapshotID << "[label=\"copy-constructor\" color=red penwith=3 style=solid arrowhead=normal];" << std::endl;
     }
 
     Var (      Var&& other) noexcept : var (std::move (other.var)), name (std::move (other.name)),  snapshotID (rand ())
     {
+        GVZ << "var" << snapshotID << "[label = \"#"<< snapshotID << ": " << name << "@" << &var << " { " << var << " }\"];" << std::endl;
         GVZ << "var" << other.snapshotID << "->" << "var" << snapshotID << "[label=\"move-constructor\" color=green penwith=3 style=solid arrowhead=normal];" << std::endl;
     }
 
@@ -83,13 +85,23 @@ public:
     Var& operator=   (const Var&  other)
     {
         var = other.var;
-        GVZ << "var" << other.snapshotID << "->" << "var" << snapshotID << "[label=\"copy-assigned\" color=red penwith=3 style=solid arrowhead=normal];" << std::endl;
+        
+        int old = snapshotID;
+        snapshot ();
+
+        GVZ << "var" << old              << "->" << "var" << snapshotID << "[label=\"move-assigned\" color=green penwith=3 style=solid arrowhead=normal];" << std::endl;
+        GVZ << "var" << other.snapshotID << "->" << "var" << snapshotID << "[label=\"move-assigned\" color=green penwith=3 style=solid arrowhead=normal];" << std::endl;
 
         return *this;
     }
     Var& operator=   (const Var&& other)
     {
         var = std::move (other.var);
+
+        int old = snapshotID;
+        snapshot ();
+
+        GVZ << "var" << old              << "->" << "var" << snapshotID << "[label=\"move-assigned\" color=green penwith=3 style=solid arrowhead=normal];" << std::endl;
         GVZ << "var" << other.snapshotID << "->" << "var" << snapshotID << "[label=\"move-assigned\" color=green penwith=3 style=solid arrowhead=normal];" << std::endl;
 
         return *this;
@@ -101,16 +113,27 @@ public:
 
         int rid = rand ();
         GVZ << "id" << rid << "[label = \"#"<< rid << ": " << "@" << &value << " { " << value << " }\"];" << std::endl;
-        GVZ << "id" << rid << "->" << "var" << snapshotID << "[label=\"copy-assign\" color=red penwith=3 style=solid arrowhead=normal];" << std::endl;
+
+        int old = snapshotID;
+        snapshot ();
+
+        GVZ << "var" << old << "->" << "var" << snapshotID << "[label=\"move-assign\" color=green penwith=3 style=solid arrowhead=normal];" << std::endl;
+        GVZ << "id"  << rid << "->" << "var" << snapshotID << "[label=\"move-assign\" color=green penwith=3 style=solid arrowhead=normal];" << std::endl;
 
         return *this;
     }
     Var& operator=   (const T&& value)
     {
         var = std::move (value);
+
         int rid = rand ();
         GVZ << "id" << rid << "[label = \"#"<< rid << ": " << "@" << &value << " { " << value << " }\"];" << std::endl;
-        GVZ << "id" << rid << "->" << "var" << snapshotID << "[label=\"move-assign\" color=green penwith=3 style=solid arrowhead=normal];" << std::endl;
+
+        int old = snapshotID;
+        snapshot ();
+
+        GVZ << "var" << old << "->" << "var" << snapshotID << "[label=\"move-assign\" color=green penwith=3 style=solid arrowhead=normal];" << std::endl;
+        GVZ << "id"  << rid << "->" << "var" << snapshotID << "[label=\"move-assign\" color=green penwith=3 style=solid arrowhead=normal];" << std::endl;
         
         return *this;
     }
@@ -201,6 +224,12 @@ private:
     int snapshotID;
 
     int getID () { return snapshotID = rand (); }
+    int snapshot ()
+    {
+        snapshotID = rand ();
+        GVZ << "var" << snapshotID << "[label = \"#"<< snapshotID << ": " << name << "@" << &var << " { " << var << " }\"];" << std::endl;
+        return snapshotID;
+    }
 };
 
 #define LET(type, name, val) Var<type> name (val, #name)

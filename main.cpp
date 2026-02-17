@@ -4,7 +4,8 @@
 int main ()
 {
 
-    LET (int, a, 52);
-    LET (int, b, 0);
-    int c = a;
+    Var<int> a (42, "a");
+    Var<int> b (32, "b");
+
+    b = a;
 }

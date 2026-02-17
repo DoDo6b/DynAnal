@@ -8,8 +8,9 @@ class GraphViz
 {
 private:
     std::ofstream stream;
+    const std::string fname;
 public:
-    GraphViz (const std::string& fname)
+    GraphViz (const std::string& fname) : fname (fname)
     {
         stream.open (fname);
 
@@ -25,6 +26,9 @@ public:
         stream << "}" << std::endl;
 
         if (stream.is_open ()) stream.close ();
+
+        std::string buffer = "dot -Tpng " + fname + " -o " + fname + ".png";
+        system (buffer.c_str ());
     }
 
     template<typename T>
