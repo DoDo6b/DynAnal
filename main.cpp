@@ -1,13 +1,10 @@
-#include "include.hpp"
+#include <iostream>
+#include "src/include.hpp"
 
 int main ()
 {
-    LET (int, a);
 
-    for (int i = 0; i < 10; i++)
-    {
-        a = i;
-    }
-
-    return 0;
+    LET (int, a, 52);
+    LET (int, b, 0);
+    int c = a;
 }
