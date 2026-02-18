@@ -55,16 +55,17 @@ public:
 
     //------------------------------------------------------------------------------------------------------
     // Casters
-    operator T () const
+    template<typename U = T, typename = std::enable_if_t<!std::is_reference_v<U> > >
+    explicit operator U () const
     {
         int rid = rand ();
         GVZ << "id" << rid << "[label = \"Jumping into the void...\", fillcolor=orange];" << std::endl;
         GVZ << "var" << snapshotID << "->" << "id" << rid << "[label=\"Casted\" color=orange penwith=3 style=solid arrowhead=normal];" << std::endl;
 
-        return static_cast<T> (var);
+        return var;
     }
 
-    explicit operator const T& () const
+    operator const T& () const
     {
         int rid = rand ();
         GVZ << "id" << rid << "[label = \"Jumping into the void...\", fillcolor=greenyellow];" << std::endl;
@@ -144,9 +145,9 @@ public:
     //  Arithmetic
     #define BinOP(op)                                                                                                                                                           \
     Var operator op (const Var& rhs) const                                                                                                                                      \
-    {                                                                                                                                                                           \ 
+    {                                                                                                                                                                           \
                                                                                                                                                                                 \
-        Var<T> result = var op rhs.var;                                                                                                                                         \
+        Var<T> result (var op rhs.var);                                                                                                                                         \
                                                                                                                                                                                 \
         GVZ << "var"  << snapshotID     << "->" << "var" << result.snapshotID << "[label=\"" << #op << "\" color=green penwith=3 style=solid arrowhead=normal];" << std::endl;  \
         GVZ << "var"  << rhs.snapshotID << "->" << "var" << result.snapshotID << "[label=\"" << #op << "\" color=green penwith=3 style=solid arrowhead=normal];" << std::endl;  \
@@ -167,10 +168,17 @@ public:
 
     #undef BinOP
     
-    #define BoolOP(op)                                  \
-    bool operator op (const Var& rhs) const             \
-    {                                                   \
-        return var op rhs.var;                          \
+    #define BoolOP(op)                                                                                                                                          \
+    bool operator op (const Var& rhs) const                                                                                                                     \
+    {                                                                                                                                                           \
+        int rid = rand ();                                                                                                                                      \
+        std::string result = var op rhs.var ? "true" : "false";                                                                                                 \
+        GVZ << "id" << rid << "[label = \"" << result << "\"];" << std::endl;                                                                                   \
+                                                                                                                                                                \
+        GVZ << "var"  << snapshotID     << "->" << "id" << rid << "[label=\"" << #op << "\" color=green penwith=3 style=solid arrowhead=normal];" << std::endl; \
+        GVZ << "var"  << rhs.snapshotID << "->" << "id" << rid << "[label=\"" << #op << "\" color=green penwith=3 style=solid arrowhead=normal];" << std::endl; \
+                                                                                                                                                                \
+        return var op rhs.var;                                                                                                                                  \
     }
 
     BoolOP (<)
@@ -187,11 +195,19 @@ public:
     bool operator!  () const { return !var; }
     Var  operator~  () const { return ~var; }
 
-    #define AssOP(op)                   \
-    Var& operator op (const Var& rhs)   \
-    {                                   \
-        var op rhs.var;                 \
-        return *this;                   \
+    #define AssOP(op)                                                                                                                                                   \
+    Var& operator op (const Var& rhs)                                                                                                                                   \
+    {                                                                                                                                                                   \
+        var op rhs.var;                                                                                                                                                 \
+                                                                                                                                                                        \
+        int old = snapshotID;                                                                                                                                           \
+        snapshot ();                                                                                                                                                    \
+                                                                                                                                                                        \
+        GVZ << "var" << old            << "->" << "var" << snapshotID << "[label=\"" << #op << "\" color=green penwith=3 style=solid arrowhead=normal];" << std::endl;  \
+        GVZ << "var" << rhs.snapshotID << "->" << "var" << snapshotID << "[label=\"" << #op << "\" color=green penwith=3 style=solid arrowhead=normal];" << std::endl;  \
+                                                                                                                                                                        \
+                                                                                                                                                                        \
+        return *this;                                                                                                                                                   \
     }
 
     AssOP (+=)
@@ -227,6 +243,7 @@ public:
 private:
     T var;
     std::string name;
+
     int snapshotID;
 
     int snapshot ()
@@ -237,4 +254,6 @@ private:
     }
 };
 
-#define LET(type, name, val) Var<type> name (val, #name)
+#define LETA(t, name)     Var<t> name (#name)
+#define LET(t, name, val) Var<t> name (val, #name)
+#define SC(t, val) static_cast<Var<t>> (val)
