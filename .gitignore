@@ -15,7 +15,6 @@ logs
 *.htm
 *.html
 *.log
-*.txt
 *.dot
 dump*.png
 
