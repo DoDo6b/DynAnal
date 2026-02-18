@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <sstream>
 #include <fstream>
 #include <random>
 
@@ -9,6 +10,8 @@ class GraphViz
 private:
     std::ofstream stream;
     const std::string fname;
+
+    unsigned char depth{1};
 public:
     GraphViz (const std::string& fname) : fname (fname)
     {
@@ -42,5 +45,22 @@ public:
     {
         stream << manip;
         return *this;
+    }
+
+    unsigned char subgraphOpen (const std::string& name)
+    {
+        char colorbyte = 0xFF - (0xA * depth);
+        char color[8] = "";
+        snprintf (color, sizeof (color), "%02x%02x%02x", colorbyte, colorbyte, colorbyte);
+
+        stream << "subgraph " << name << "\n{\n\tbgcolor=" << color << ";\n\tlabel=\"" << name << "\";\n";
+
+        return ++depth;
+    }
+
+    unsigned char subgraphClose ()
+    {
+        stream << "}\n";
+        return --depth;
     }
 };

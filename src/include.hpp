@@ -13,18 +13,18 @@ public:
     //  Constructors: default, value
     Var (                const std::string& name, bool tracked = false)      : var (T()),                name (std::move (name)), snapshotID (rand ()), tracked (tracked)
     {
-        std::string kostyl = tracked ? " ■ " : " □ ";
-        GVZ << "var" << snapshotID << "[label = \"" << kostyl << "#"<< snapshotID << ": " << name << "@" << &var << " { " << var << " }\"];" << std::endl;
+        std::string isTracked = tracked ? " ■ " : " □ ";
+        GVZ << "var" << snapshotID << "[label = \"" << isTracked << "#"<< snapshotID << ": " << name << "@" << &var << " { " << var << " }\"];" << std::endl;
     }
     Var (const T& value, const std::string& name = "", bool tracked = false) : var (value),              name (std::move (name)), snapshotID (rand ()), tracked (tracked)
     {
-        std::string kostyl = tracked ? " ■ " : " □ ";
-        GVZ << "var" << snapshotID << "[label = \"" << kostyl << "#"<< snapshotID << ": " << name << "@" << &var << " { " << value << " }\", fillcolor=red];" << std::endl;
+        std::string isTracked = tracked ? " ■ " : " □ ";
+        GVZ << "var" << snapshotID << "[label = \"" << isTracked << "#"<< snapshotID << ": " << name << "@" << &var << " { " << value << " }\", fillcolor=red];" << std::endl;
     }
     Var (      T&& value, const std::string& name = "", bool tracked = false) : var (std::move (value)), name (std::move (name)), snapshotID (rand ()), tracked (tracked)
     {
-        std::string kostyl = tracked ? " ■ " : " □ ";
-        GVZ << "var" << snapshotID << "[label = \"" << kostyl << "#"<< snapshotID << ": " << name << "@" << &var << " { " << value << " }\", fillcolor=green];" << std::endl;
+        std::string isTracked = tracked ? " ■ " : " □ ";
+        GVZ << "var" << snapshotID << "[label = \"" << isTracked << "#"<< snapshotID << ": " << name << "@" << &var << " { " << value << " }\", fillcolor=green];" << std::endl;
     }
 
 
@@ -253,8 +253,8 @@ private:
     int snapshot ()
     {
         snapshotID = rand ();
-        std::string kostyl = tracked ? " ■ " : " □ ";
-        GVZ << "var" << snapshotID << "[label = \"" << kostyl << "#"<< snapshotID << ": " << name << "@" << &var << " { " << var << " }\"];" << std::endl;
+        std::string isTracked = tracked ? " ■ " : " □ ";
+        GVZ << "var" << snapshotID << "[label = \"" << isTracked << "#"<< snapshotID << ": " << name << "@" << &var << " { " << var << " }\"];" << std::endl;
         return snapshotID;
     }
 };
@@ -263,16 +263,12 @@ private:
 #define LET(t, name, val) Var<t> name (val, #name, true)
 #define SC(t, val) static_cast<Var<t>> (val)
 
-#define Beg(name)                                       \
-{                                                       \
-    GVZ << "subgraph " << name << " {" << std::endl;
-#define End(ret)                                        \
-    GVZ << "}" << std::endl;                            \
-    return ret;                                         \
-}
-#define Ret(ret)                                        \
-{                                                       \
-    GVZ << "}" << std::endl;                            \
-    return ret;                                         \
-}
 
+class Subgraph
+{
+public:
+    Subgraph  (const std::string& name) { GVZ.subgraphOpen  (name); }
+    ~Subgraph ()                        { GVZ.subgraphClose (); }
+};
+
+#define BEG Subgraph (__func__);
