@@ -65,7 +65,7 @@ public:
         GVZ << "id" << rid << "[label = \"Jumping into the void...\", fillcolor=orange];" << std::endl;
         GVZ << "var" << snapshotID << "->" << "id" << rid << "[label=\"Casted\" color=orange penwith=3 style=solid arrowhead=normal];" << std::endl;
 
-        return var;
+        return static_cast<U> (var);
     }
 
     operator const T& () const
