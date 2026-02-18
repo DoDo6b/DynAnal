@@ -17,7 +17,7 @@ public:
     }
     Var (const T& value, const std::string& name = "") : var (value),              name (std::move (name)), snapshotID (rand ())
     {
-        GVZ << "var" << snapshotID << "[label = \"#"<< snapshotID << ": " << name << "@" << &var << " { " << value << " }\", fillcolor=coral];" << std::endl;
+        GVZ << "var" << snapshotID << "[label = \"#"<< snapshotID << ": " << name << "@" << &var << " { " << value << " }\", fillcolor=red];" << std::endl;
     }
     Var (      T&& value, const std::string& name = "") : var (std::move (value)), name (std::move (name)), snapshotID (rand ())
     {
@@ -58,8 +58,8 @@ public:
     operator T () const
     {
         int rid = rand ();
-        GVZ << "id" << rid << "[label = \"Jumping into the void...\", fillcolor=yellow];" << std::endl;
-        GVZ << "var" << snapshotID << "->" << "id" << rid << "[label=\"Casted\" color=yellow penwith=3 style=solid arrowhead=normal];" << std::endl;
+        GVZ << "id" << rid << "[label = \"Jumping into the void...\", fillcolor=orange];" << std::endl;
+        GVZ << "var" << snapshotID << "->" << "id" << rid << "[label=\"Casted\" color=orange penwith=3 style=solid arrowhead=normal];" << std::endl;
 
         return static_cast<T> (var);
     }
@@ -67,16 +67,16 @@ public:
     explicit operator const T& () const
     {
         int rid = rand ();
-        GVZ << "id" << rid << "[label = \"Jumping into the void...\", fillcolor=yellow];" << std::endl;
-        GVZ << "var" << snapshotID << "->" << "id" << rid << "[label=\"Casted\" color=yellow penwith=3 style=solid arrowhead=normal];" << std::endl;
+        GVZ << "id" << rid << "[label = \"Jumping into the void...\", fillcolor=greenyellow];" << std::endl;
+        GVZ << "var" << snapshotID << "->" << "id" << rid << "[label=\"Casted\" color=greenyellow penwith=3 style=solid arrowhead=normal];" << std::endl;
 
         return var;
     }
 
           T* operator-> ()       { return &var; }
     const T* operator-> () const { return &var; }
-          T& operator*  ()               { return  var; }
-    const T& operator*  () const         { return  var; }
+          T& operator*  ()       { return  var; }
+    const T& operator*  () const { return  var; }
 
 
 
@@ -108,7 +108,7 @@ public:
     }
 
     Var& operator=   (const T& value)
-        {
+    {
         var = value;
 
         int rid = rand ();
@@ -142,10 +142,16 @@ public:
 
     //------------------------------------------------------------------------------------------------------
     //  Arithmetic
-    #define BinOP(op)                                   \
-    Var operator op (const Var& rhs) const              \
-    {                                                   \
-        return Var<T> (var op rhs.var);                 \
+    #define BinOP(op)                                                                                                                                                           \
+    Var operator op (const Var& rhs) const                                                                                                                                      \
+    {                                                                                                                                                                           \ 
+                                                                                                                                                                                \
+        Var<T> result = var op rhs.var;                                                                                                                                         \
+                                                                                                                                                                                \
+        GVZ << "var"  << snapshotID     << "->" << "var" << result.snapshotID << "[label=\"" << #op << "\" color=green penwith=3 style=solid arrowhead=normal];" << std::endl;  \
+        GVZ << "var"  << rhs.snapshotID << "->" << "var" << result.snapshotID << "[label=\"" << #op << "\" color=green penwith=3 style=solid arrowhead=normal];" << std::endl;  \
+                                                                                                                                                                                \
+        return result;                                                                                                                                                          \
     }
 
     BinOP (+)
@@ -223,7 +229,6 @@ private:
     std::string name;
     int snapshotID;
 
-    int getID () { return snapshotID = rand (); }
     int snapshot ()
     {
         snapshotID = rand ();
