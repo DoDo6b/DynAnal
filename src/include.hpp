@@ -11,32 +11,35 @@ class Var
 {
 public:
     //  Constructors: default, value
-    Var (                const std::string& name)      : var (T()),                name (std::move (name)), snapshotID (rand ())
+    Var (                const std::string& name, bool tracked = false)      : var (T()),                name (std::move (name)), snapshotID (rand ()), tracked (tracked)
     {
-        GVZ << "var" << snapshotID << "[label = \"#"<< snapshotID << ": " << name << "@" << &var << " { " << var << " }\"];" << std::endl;
+        std::string kostyl = tracked ? " ■ " : " □ ";
+        GVZ << "var" << snapshotID << "[label = \"" << kostyl << "#"<< snapshotID << ": " << name << "@" << &var << " { " << var << " }\"];" << std::endl;
     }
-    Var (const T& value, const std::string& name = "") : var (value),              name (std::move (name)), snapshotID (rand ())
+    Var (const T& value, const std::string& name = "", bool tracked = false) : var (value),              name (std::move (name)), snapshotID (rand ()), tracked (tracked)
     {
-        GVZ << "var" << snapshotID << "[label = \"#"<< snapshotID << ": " << name << "@" << &var << " { " << value << " }\", fillcolor=red];" << std::endl;
+        std::string kostyl = tracked ? " ■ " : " □ ";
+        GVZ << "var" << snapshotID << "[label = \"" << kostyl << "#"<< snapshotID << ": " << name << "@" << &var << " { " << value << " }\", fillcolor=red];" << std::endl;
     }
-    Var (      T&& value, const std::string& name = "") : var (std::move (value)), name (std::move (name)), snapshotID (rand ())
+    Var (      T&& value, const std::string& name = "", bool tracked = false) : var (std::move (value)), name (std::move (name)), snapshotID (rand ()), tracked (tracked)
     {
-        GVZ << "var" << snapshotID << "[label = \"#"<< snapshotID << ": " << name << "@" << &var << " { " << value << " }\", fillcolor=green];" << std::endl;
+        std::string kostyl = tracked ? " ■ " : " □ ";
+        GVZ << "var" << snapshotID << "[label = \"" << kostyl << "#"<< snapshotID << ": " << name << "@" << &var << " { " << value << " }\", fillcolor=green];" << std::endl;
     }
 
 
 
     //------------------------------------------------------------------------------------------------------
     // Constructors: copy, move
-    Var (const Var& other)           : var (other.var),             name (other.name),              snapshotID (rand ())
+    Var (const Var& other)           : var (other.var),             name (other.name),              snapshotID (rand ()), tracked (false)
     {
-        GVZ << "var" << snapshotID << "[label = \"#"<< snapshotID << ": " << name << "@" << &var << " { " << var << " }\"];" << std::endl;
+        GVZ << "var" << snapshotID << "[label = \"#" << snapshotID << ": " << name << "@" << &var << " { " << var << " }\"];" << std::endl;
         GVZ << "var" << other.snapshotID << "->" << "var" << snapshotID << "[label=\"copy-constructor\" color=red penwith=3 style=solid arrowhead=normal];" << std::endl;
     }
 
-    Var (      Var&& other) noexcept : var (std::move (other.var)), name (std::move (other.name)),  snapshotID (rand ())
+    Var (      Var&& other) noexcept : var (std::move (other.var)), name (std::move (other.name)),  snapshotID (rand ()), tracked (false)
     {
-        GVZ << "var" << snapshotID << "[label = \"#"<< snapshotID << ": " << name << "@" << &var << " { " << var << " }\"];" << std::endl;
+        GVZ << "var" << snapshotID << "[label = \"#" << snapshotID << ": " << name << "@" << &var << " { " << var << " }\"];" << std::endl;
         GVZ << "var" << other.snapshotID << "->" << "var" << snapshotID << "[label=\"move-constructor\" color=green penwith=3 style=solid arrowhead=normal];" << std::endl;
     }
 
@@ -244,16 +247,32 @@ private:
     T var;
     std::string name;
 
+    bool tracked;
     int snapshotID;
 
     int snapshot ()
     {
         snapshotID = rand ();
-        GVZ << "var" << snapshotID << "[label = \"#"<< snapshotID << ": " << name << "@" << &var << " { " << var << " }\"];" << std::endl;
+        std::string kostyl = tracked ? " ■ " : " □ ";
+        GVZ << "var" << snapshotID << "[label = \"" << kostyl << "#"<< snapshotID << ": " << name << "@" << &var << " { " << var << " }\"];" << std::endl;
         return snapshotID;
     }
 };
 
-#define LETA(t, name)     Var<t> name (#name)
-#define LET(t, name, val) Var<t> name (val, #name)
+#define LETA(t, name)     Var<t> name (#name, true)
+#define LET(t, name, val) Var<t> name (val, #name, true)
 #define SC(t, val) static_cast<Var<t>> (val)
+
+#define Beg(name)                                       \
+{                                                       \
+    GVZ << "subgraph " << name << " {" << std::endl;
+#define End(ret)                                        \
+    GVZ << "}" << std::endl;                            \
+    return ret;                                         \
+}
+#define Ret(ret)                                        \
+{                                                       \
+    GVZ << "}" << std::endl;                            \
+    return ret;                                         \
+}
+
