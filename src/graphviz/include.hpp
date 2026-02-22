@@ -18,10 +18,25 @@ public:
         stream.open (fname);
 
         stream
-        << "digraph GVZ {\n" 
-        << "\tnode [shape=rect, fontname=\"Hack\", style=filled];\n"
-        << "\tsplines=polyline;\n"
-        << "\tedge [fontname=\"Hack\", fontsize=8];\n"
+        << "digraph GVZ {\n"
+        << "\trankdir=TB;\n"
+        << "\tcompound=true;\n"
+        << "\tsplines=true;\n" 
+        << "\tnodesep=0.4;\n"
+        << "\tranksep=0.6;\n"
+        << "\tnode [\n"
+            << "\t\tshape=record,\n"
+            << "\t\tstyle=filled,\n"
+            << "\t\tfontname=\"Hack\",\n"
+            << "\t\tfontsize=9,\n"
+            << "\t\tmargin=\"0.05,0.03\",\n"
+            << "\t\tpenwidth=1.0\n"
+        << "\t];\n"
+        << "\tedge ["
+            << "\t\tfontname=\"Hack\",\n"
+            << "\t\tfontsize=9,\n"
+            << "\t\tarrowsize=0.7\n"
+        << "\t];\n"
         << std::endl;
     }
     ~GraphViz ()
@@ -49,11 +64,16 @@ public:
 
     unsigned char subgraphOpen (const std::string& name)
     {
-        char colorbyte = 0xFF - (0xA * depth);
-        char color[8] = "";
+        unsigned char colorbyte = 0xFF - (0xF * depth);
+        char color[7] = "";
         snprintf (color, sizeof (color), "%02x%02x%02x", colorbyte, colorbyte, colorbyte);
 
-        stream << "subgraph " << name << "\n{\n\tbgcolor=" << color << ";\n\tlabel=\"" << name << "\";\n";
+        stream
+        << "subgraph cluster_" << name 
+        << " {\n\tcolor=\"#" << color 
+        << "\";\n\tstyle=rounded;"
+        << "\n\tlabel=\"" << name 
+        << "\";\n";
 
         return ++depth;
     }
