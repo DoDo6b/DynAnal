@@ -7,10 +7,11 @@
 #include <cxxabi.h>
 
 #include "graphviz/include.hpp"
-GraphViz GVZ ("../logs/graph.dot");
+GraphViz GVZ ("logs/graph.dot");
 
 #define NAMED_VARCOLOR "\"#d0ffff\""
 #define UNNANED_VARCOLOR "\"#ffd0d0\""
+#define HIDDEN_VARCOLOR "\"#afafaf\""
 #define CASTED "\"#ffd000\""
 
 
@@ -27,15 +28,15 @@ class Var
 {
 public:
     //  Constructors: default, value
-    Var (                std::string_view name, bool tracked = false)      : var (T()),                name (name), type ( std::move( demangle ( typeid (T).name () ) ) )
+    Var (                std::string_view name,       bool hidden = false) : var (T()),               name (name), type ( std::move( demangle ( typeid (T).name () ) ) ), ID (rand ()), hidden (hidden)
     {
         snapshot ();
     }
-    Var (const T& value, std::string_view name = "", bool tracked = false) : var (value),              name (name), type ( std::move( demangle ( typeid (T).name () ) ) )
+    Var (const T& value, std::string_view name = "",  bool hidden = false) : var (value),             name (name), type ( std::move( demangle ( typeid (T).name () ) ) ), ID (rand ()), hidden (hidden)
     {
         snapshot ();
     }
-    Var (      T&& value, std::string_view name = "", bool tracked = false) : var (std::move (value)), name (name), type ( std::move( demangle ( typeid (T).name () ) ) )
+    Var (      T&& value, std::string_view name = "", bool hidden = false) : var (std::move (value)), name (name), type ( std::move( demangle ( typeid (T).name () ) ) ), ID (rand ()), hidden (hidden)
     {
         snapshot ();
     }
@@ -44,16 +45,16 @@ public:
 
     //------------------------------------------------------------------------------------------------------
     // Constructors: copy, move
-    Var (const Var& other)           : var (other.var),             name (other.name),              type ( std::move( demangle ( typeid (T).name () ) ) )
+    Var (const Var& other)           : var (other.var),             name (other.name),              type ( std::move( demangle ( typeid (T).name () ) ) ), ID (rand ()), hidden (false)
     {
         snapshot ();
-        GVZ << "var" << other.snapshotID << "->" << "var" << snapshotID << "[label=\"copy-constructor\" color=red penwith=3 style=solid];" << std::endl;
+        GVZ << "var" << other.snapshotID << "->" << "var" << snapshotID << "[label=\"copy-constructor\" color=red style=solid];" << std::endl;
     }
 
-    Var (      Var&& other) noexcept : var (std::move (other.var)), name (std::move (other.name)),  type ( std::move( demangle ( typeid (T).name () ) ) )
+    Var (      Var&& other) noexcept : var (std::move (other.var)), name (std::move (other.name)),  type ( std::move( demangle ( typeid (T).name () ) ) ), ID (rand ()), hidden (false)
     {
         snapshot ();
-        GVZ << "var" << other.snapshotID << "->" << "var" << snapshotID << "[label=\"move-constructor\" color=green penwith=3 style=solid];" << std::endl;
+        GVZ << "var" << other.snapshotID << "->" << "var" << snapshotID << "[label=\"move-constructor\" color=green style=solid];" << std::endl;
     }
 
 
@@ -64,7 +65,7 @@ public:
     {
         int rid = rand ();
         GVZ << "id" << rid << "[label = \"{RIP | 2026-2026}\", fillcolor=lightgrey];" << std::endl;
-        GVZ << "var" << snapshotID << "->" << "id" << rid << "[label=\"Destroyed\" color=black penwith=3 style=solid];" << std::endl;
+        GVZ << "var" << snapshotID << "->" << "id" << rid << "[label=\"Destroyed\" color=black style=solid];" << std::endl;
     }
 
 
@@ -76,7 +77,7 @@ public:
     {
         int rid = rand ();
         GVZ << "id" << rid << "[label = \"{ ID | Type | Ptr }|{ " << rid << " | " << demangle(typeid (U).name ()) << " | ??? }\", fillcolor=" << CASTED << "];" << std::endl;
-        GVZ << "var" << snapshotID << "->" << "id" << rid << "[label=\"Cast\" penwith=3 style=solid];" << std::endl;
+        GVZ << "var" << snapshotID << "->" << "id" << rid << "[label=\"Cast\" style=solid];" << std::endl;
 
         return static_cast<U> (var);
     }
@@ -85,7 +86,7 @@ public:
     {
         int rid = rand ();
         GVZ << "id" << rid << "[label = \"{ ID | Type | Ptr }|{ " << rid << " | " << demangle(typeid (T).name ()) << " | ??? }\", fillcolor=" << CASTED << "];" << std::endl;
-        GVZ << "var" << snapshotID << "->" << "id" << rid << "[label=\"Cast\" penwith=3 style=solid];" << std::endl;
+        GVZ << "var" << snapshotID << "->" << "id" << rid << "[label=\"Cast\" style=solid];" << std::endl;
 
         return var;
     }
@@ -106,8 +107,8 @@ public:
         int old = snapshotID;
         snapshot ();
 
-        GVZ << "var" << old              << "->" << "var" << snapshotID << "[label=\"move-assigned\" color=green penwith=3 style=solid];" << std::endl;
-        GVZ << "var" << other.snapshotID << "->" << "var" << snapshotID << "[label=\"move-assigned\" color=green penwith=3 style=solid];" << std::endl;
+        GVZ << "var" << old              << "->" << "var" << snapshotID << "[label=\"move-assigned\" color=green style=solid];" << std::endl;
+        GVZ << "var" << other.snapshotID << "->" << "var" << snapshotID << "[label=\"move-assigned\" color=green style=solid];" << std::endl;
 
         return *this;
     }
@@ -118,8 +119,8 @@ public:
         int old = snapshotID;
         snapshot ();
 
-        GVZ << "var" << old              << "->" << "var" << snapshotID << "[label=\"move-assigned\" color=green penwith=3 style=solid];" << std::endl;
-        GVZ << "var" << other.snapshotID << "->" << "var" << snapshotID << "[label=\"move-assigned\" color=green penwith=3 style=solid];" << std::endl;
+        GVZ << "var" << old              << "->" << "var" << snapshotID << "[label=\"move-assigned\" color=green style=solid];" << std::endl;
+        GVZ << "var" << other.snapshotID << "->" << "var" << snapshotID << "[label=\"move-assigned\" color=green style=solid];" << std::endl;
 
         return *this;
     }
@@ -134,8 +135,8 @@ public:
         int old = snapshotID;
         snapshot ();
 
-        GVZ << "var" << old << "->" << "var" << snapshotID << "[label=\"move-assign\" color=green penwith=3 style=solid];" << std::endl;
-        GVZ << "id"  << rid << "->" << "var" << snapshotID << "[label=\"move-assign\" color=green penwith=3 style=solid];" << std::endl;
+        GVZ << "var" << old << "->" << "var" << snapshotID << "[label=\"move-assign\" color=green style=solid];" << std::endl;
+        GVZ << "id"  << rid << "->" << "var" << snapshotID << "[label=\"move-assign\" color=green style=solid];" << std::endl;
 
         return *this;
     }
@@ -149,8 +150,8 @@ public:
         int old = snapshotID;
         snapshot ();
 
-        GVZ << "var" << old << "->" << "var" << snapshotID << "[label=\"move-assign\" color=green penwith=3 style=solid];" << std::endl;
-        GVZ << "id"  << rid << "->" << "var" << snapshotID << "[label=\"move-assign\" color=green penwith=3 style=solid];" << std::endl;
+        GVZ << "var" << old << "->" << "var" << snapshotID << "[label=\"move-assign\" color=green style=solid];" << std::endl;
+        GVZ << "id"  << rid << "->" << "var" << snapshotID << "[label=\"move-assign\" color=green style=solid];" << std::endl;
         
         return *this;
     }
@@ -163,10 +164,10 @@ public:
     Var operator op (const Var& rhs) const                                                                                                                                      \
     {                                                                                                                                                                           \
                                                                                                                                                                                 \
-        Var<T> result (var op rhs.var);                                                                                                                                         \
+        Var<T> result (var op rhs.var, "", true);                                                                                                                                   \
                                                                                                                                                                                 \
-        GVZ << "var"  << snapshotID     << "->" << "var" << result.snapshotID << "[label=\"" << #op << "\" color=green penwith=3 style=solid];" << std::endl;  \
-        GVZ << "var"  << rhs.snapshotID << "->" << "var" << result.snapshotID << "[label=\"" << #op << "\" color=green penwith=3 style=solid];" << std::endl;  \
+        GVZ << "var"  << snapshotID     << "->" << "var" << result.snapshotID << "[label=\"" << #op << "\" color=green style=solid];" << std::endl;  \
+        GVZ << "var"  << rhs.snapshotID << "->" << "var" << result.snapshotID << "[label=\"" << #op << "\" color=green style=solid];" << std::endl;  \
                                                                                                                                                                                 \
         return result;                                                                                                                                                          \
     }
@@ -191,8 +192,8 @@ public:
         std::string result = var op rhs.var ? "true" : "false";                                                                                                 \
         GVZ << "id" << rid << "[label = \"" << result << "\"];" << std::endl;                                                                                   \
                                                                                                                                                                 \
-        GVZ << "var"  << snapshotID     << "->" << "id" << rid << "[label=\"" << #op << "\" color=green penwith=3 style=solid];" << std::endl; \
-        GVZ << "var"  << rhs.snapshotID << "->" << "id" << rid << "[label=\"" << #op << "\" color=green penwith=3 style=solid];" << std::endl; \
+        GVZ << "var"  << snapshotID     << "->" << "id" << rid << "[label=\"" << #op << "\" color=green style=solid];" << std::endl; \
+        GVZ << "var"  << rhs.snapshotID << "->" << "id" << rid << "[label=\"" << #op << "\" color=green style=solid];" << std::endl; \
                                                                                                                                                                 \
         return var op rhs.var;                                                                                                                                  \
     }
@@ -219,8 +220,8 @@ public:
         int old = snapshotID;                                                                                                                                           \
         snapshot ();                                                                                                                                                    \
                                                                                                                                                                         \
-        GVZ << "var" << old            << "->" << "var" << snapshotID << "[label=\"" << #op << "\" color=green penwith=3 style=solid];" << std::endl;  \
-        GVZ << "var" << rhs.snapshotID << "->" << "var" << snapshotID << "[label=\"" << #op << "\" color=green penwith=3 style=solid];" << std::endl;  \
+        GVZ << "var" << old            << "->" << "var" << snapshotID << "[label=\"" << #op << "\" color=green style=solid];" << std::endl;  \
+        GVZ << "var" << rhs.snapshotID << "->" << "var" << snapshotID << "[label=\"" << #op << "\" color=green style=solid];" << std::endl;  \
                                                                                                                                                                         \
                                                                                                                                                                         \
         return *this;                                                                                                                                                   \
@@ -259,10 +260,12 @@ public:
 private:
     T var;
 
-    std::string_view name;
+    int              ID;
     std::string      type;
+    std::string_view name;
 
-    int     snapshotID;
+    bool hidden;
+    int snapshotID;
 
     int snapshot ()
     {
@@ -277,7 +280,7 @@ private:
         }
         else color   = UNNANED_VARCOLOR;
 
-        GVZ << "var" << snapshotID << "[fillcolor=" << color << ", label = \"{ ID | " << namestr << "Type | Ptr }|{ " << snapshotID << " | " << name << termName << type << " | " << &var << " }\"];" << std::endl;
+        GVZ << "var" << snapshotID << "[fillcolor=" << color << ", label = \"{ ID | " << namestr << "Type | Ptr }|{ " << ID << " | " << name << termName << type << " | " << &var << " }\"];" << std::endl;
         return snapshotID;
     }
 };
@@ -294,4 +297,4 @@ public:
     ~Subgraph ()                        { GVZ.subgraphClose (); }
 };
 
-#define BEG Subgraph (__func__);
+#define BEG Subgraph (__PRETTY_FUNCTION__);

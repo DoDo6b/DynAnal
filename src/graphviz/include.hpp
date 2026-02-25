@@ -19,24 +19,25 @@ public:
 
         stream
         << "digraph GVZ {\n"
-        << "\trankdir=TB;\n"
-        << "\tcompound=true;\n"
-        << "\tsplines=true;\n" 
-        << "\tnodesep=0.4;\n"
-        << "\tranksep=0.6;\n"
-        << "\tnode [\n"
-            << "\t\tshape=record,\n"
-            << "\t\tstyle=filled,\n"
-            << "\t\tfontname=\"Hack\",\n"
-            << "\t\tfontsize=9,\n"
-            << "\t\tmargin=\"0.05,0.03\",\n"
-            << "\t\tpenwidth=1.0\n"
-        << "\t];\n"
-        << "\tedge ["
-            << "\t\tfontname=\"Hack\",\n"
-            << "\t\tfontsize=9,\n"
-            << "\t\tarrowsize=0.7\n"
-        << "\t];\n"
+            << "\trankdir=TB;\n"
+            << "\tcompound=true;\n"
+            << "\tsplines=true;\n" 
+            << "\tnodesep=0.4;\n"
+            << "\tranksep=0.6;\n"
+            << "\tnode [\n"
+                << "\t\tshape=record,\n"
+                << "\t\tstyle=filled,\n"
+                << "\t\tfontname=\"Hack\",\n"
+                << "\t\tfontsize=9,\n"
+                << "\t\tmargin=\"0.05,0.03\",\n"
+                << "\t\tpenwidth=1\n"
+            << "\t];\n"
+            << "\tedge [\n"
+                << "\t\tfontname=\"Hack\",\n"
+                << "\t\tfontsize=9,\n"
+                << "\t\tarrowsize=0.7,\n"
+                << "\t\tpenwidth=3\n"
+            << "\t];\n"
         << std::endl;
     }
     ~GraphViz ()
@@ -69,11 +70,12 @@ public:
         snprintf (color, sizeof (color), "%02x%02x%02x", colorbyte, colorbyte, colorbyte);
 
         stream
-        << "subgraph cluster_" << name 
-        << " {\n\tcolor=\"#" << color 
-        << "\";\n\tstyle=rounded;"
-        << "\n\tlabel=\"" << name 
-        << "\";\n";
+        << "subgraph cluster_id" << rand () << " {\n"
+        << "\tfillcolor=\"#" << color << "\";\n"
+        << "\tstyle=rounded;\n"
+        << "\tfontname=\"Hack\";\n"
+        << "\tfontsize=9;\n"
+        << "\tlabel=\"" << name << "\";\n";
 
         return ++depth;
     }
